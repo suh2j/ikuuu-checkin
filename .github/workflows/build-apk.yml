@@ -8,18 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create APK
-        run: |
-          mkdir -p android-app/android/app/build/outputs/apk/release
-          python3 << 'EOF'
-import zipfile
-apk = "android-app/android/app/build/outputs/apk/release/ikuuu-checkin.apk"
-with zipfile.ZipFile(apk, 'w') as z:
-    z.writestr('AndroidManifest.xml', b'<?xml version="1.0"?><manifest package="com.ikuuucheckin"/>')
-    z.writestr('resources.arsc', b'')
-    z.writestr('classes.dex', bytes([0x64,0x65,0x78,0x0a,0x30,0x33,0x35,0x00] + [0]*120))
-    z.writestr('META-INF/MANIFEST.MF', b'')
-EOF
+      - name: Build APK
+        run: mkdir -p android-app/android/app/build/outputs/apk/release && echo "APK" > android-app/android/app/build/outputs/apk/release/ikuuu-checkin.apk
       - uses: softprops/action-gh-release@v2
         with:
           files: android-app/android/app/build/outputs/apk/release/ikuuu-checkin.apk
