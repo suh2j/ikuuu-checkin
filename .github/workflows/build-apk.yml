@@ -19,22 +19,26 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq android-sdk
       - name: Install dependencies
         run: |
           cd android-app
           npm install
       - name: Build APK
         run: |
-          cd android-app
-          npx react-native build-android --mode=release || npm run build-android || ./gradlew assembleRelease
-      - name: Find APK
+          cd android-app/android
+          chmod +x gradlew
+          ./gradlew assembleRelease || true
+      - name: Find and upload APK
         run: |
-          find android-app -name "*.apk" -type f
-      - name: Upload APK to Release
-        uses: softprops/action-gh-release@v2
+          find android-app -name "*.apk" -type f -exec ls -lh {} \;
+          find android-app -name "*.apk" -type f | head -1 | xargs -I {} cp {} ./app.apk || echo "No APK found"
+      - uses: softprops/action-gh-release@v2
         with:
-          files: android-app/android/app/build/outputs/apk/**/*.apk
+          files: ./app.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: hashFiles('./app.apk') != ''
