@@ -10,10 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build APK
-        run: mkdir -p android-app/android/app/build/outputs/apk/release && echo "APK" > android-app/android/app/build/outputs/apk/release/ikuuu-checkin.apk
-      - uses: softprops/action-gh-release@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          files: android-app/android/app/build/outputs/apk/release/ikuuu-checkin.apk
+          node-version: '18'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install dependencies
+        run: |
+          cd android-app
+          npm install
+      - name: Build APK
+        run: |
+          cd android-app
+          npx react-native build-android --mode=release || npm run build-android || ./gradlew assembleRelease
+      - name: Find APK
+        run: |
+          find android-app -name "*.apk" -type f
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android-app/android/app/build/outputs/apk/**/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
